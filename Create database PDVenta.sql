@@ -16,9 +16,9 @@ CREATE TABLE Producto(
 	ProductoID					INT NOT NULL auto_increment,
     CategoriaProductoID			INT NOT NULL,
     Descripcion					VARCHAR(60) NOT NULL,
-    Precio						FLOAT NOT NULL,
-    Costo						DOUBLE NOT NULL,
     FechaRegistro				DATETIME NOT NULL,
+    PrecioMayor					DOUBLE NOT NULL,
+    PrecioUnitario				DOUBLE NOT NULL,
     Imagen						MEDIUMBLOB,
     LinkImagen					TINYTEXT,
     constraint pk_Producto primary key(ProductoID),
@@ -27,12 +27,13 @@ CREATE TABLE Producto(
     on update no action
     on delete no action
 );
+
 /*-CREACION DE LA ENTIDAD EXISTENCIA*/
 CREATE TABLE Existencia(
 	ExistenciaID				INT NOT NULL auto_increment,
     ProductoID					INT NOT NULL,
-    FechaVencimiento			DATE NOT NULL,
     Unidades					INT NOT NULL,
+    FechaVencimiento			DATE NOT NULL,
     constraint pk_Existencia primary key(ExistenciaID),
     constraint fk_Existencia_ProductoID foreign key(ProductoID)
     references Producto(ProductoID) match simple
@@ -62,28 +63,21 @@ CREATE TABLE Compra(
     on update no action
     on delete no action
 );
-/*-CREACION DE LA ENTIDAD COMPRA-PRODUCTO*/
-CREATE TABLE CompraProducto(
-	CompraID					INT NOT NULL,
-    ProductoID					INT NOT NULL,
-    constraint fk_CompraProducto_CompraID foreign key(CompraID)
-    references Compra(CompraID) match simple
-    on update no action
-    on delete no action,
-    constraint fk_CompraProducto_ProductoID foreign key(ProductoID)
-    references Producto(ProductoID) match simple
-    on update no action
-    on delete no action
-);
 /*-CREACION DE LA ENTIDAD DETALLE-COMPRA*/
 CREATE TABLE DetalleCompra(
 	DetalleCompraID				INT NOT NULL auto_increment,
+    ProductoID					INT NOT NULL,
     ProveedorID					INT NOT NULL,
-    Descripcion					VARCHAR(60) NOT NULL,
-    Unidades					INT NOT NULL,
+    DescripcionCompra			VARCHAR(60) NOT NULL,
+    Cantidad					INT NOT NULL,
+    PesoProducto				INT NOT NULL,
     Costo						DOUBLE NOT NULL,
     SubTotal					DOUBLE NOT NULL,
     constraint pk_DetalleCompra primary key(DetalleCompraID),
+    constraint fk_DetalleCompra_ProductoID foreign key(ProductoID)
+    references Producto(ProductoID) match simple
+    on update no action
+    on delete no action,
     constraint fk_DetalleCompra_ProveedorID foreign key(ProveedorID)
     references Proveedor(ProveedorID) match simple
     on update no action
@@ -115,7 +109,7 @@ CREATE TABLE Personal(
 /*-CREACION DE LA ENTIDAD DB-USUARIO*/
 CREATE TABLE DBUsuario(
 	PersonalID					INT NOT NULL,
-    Constrasenia				TINYTEXT NOT NULL,
+    Contrasenia					TINYTEXT NOT NULL,
     constraint pk_DBUsuario primary key(PersonalID),
     constraint fk_DBUsuario_PersonalID foreign key(PersonalID)
     references Personal(PersonalID) match simple
@@ -133,64 +127,25 @@ CREATE TABLE Cliente(
     Email						VARCHAR(30),
     constraint pk_Cliente primary key(ClienteID)
 );
-/*-CREACION DE LA ENTIDAD VENTA*/
-CREATE TABLE Venta(
-	VentaID						INT NOT NULL auto_increment,
-    Monto						FLOAT NOT NULL,
-    Fecha						DATE NOT NULL,
-    constraint pk_Venta primary key(VentaID)
-);
-/*-CREACION DE LA ENTIDAD CLIENTE-VENTA*/
-CREATE TABLE ClienteVenta(
-	VentaID						INT NOT NULL,
-    ClienteID					INT NOT NULL,
-    constraint fk_ClienteVenta_VentaID foreign key(VentaID)
-    references Venta(VentaID)match simple
-    on update no action
-    on delete no action,
-    constraint fk_ClienteVenta_ClienteID foreign key(ClienteID)
-    references Cliente(ClienteID) match simple
-    on update no action
-    on delete no action
-);
 /*-CREACION DE LA ENTIDAD CAJERO*/
 CREATE TABLE Cajero(
 	CajeroID					INT NOT NULL,
-    Contrasenia					TINYTEXT NOT NULL,
     constraint pk_Cajero primary key(CajeroID),
     constraint fk_Cajero_CajeroID foreign key(CajeroID)
     references Personal(PersonalID) match simple
     on update no action
     on delete no action
 );
-/*-CREACION DE LA ENTIDAD CAJERO-VENTA*/
-CREATE TABLE CajeroVenta(
-	VentaID						INT NOT NULL,
-    CajeroID					INT NOT NULL,
-    constraint fk_CajeroVenta_VentaID foreign key(VentaID)
-    references Venta(VentaID) match simple
-    on update no action
-    on delete no action,
-    constraint fk_CajeroVenta_CajeroID foreign key(CajeroID)
-    references Cajero(CajeroID) match simple
-    on update no action
-    on delete no action
-);
-/*-CREACION DE LA ENTIDAD DETALLE-FACTURA*/
-CREATE TABLE DetalleFactura(
-	DetalleFacturaID			INT NOT NULL auto_increment,
-    VentaID						INT NOT NULL,
+/*-CREACION DE LA ENTIDAD VENTA*/
+CREATE TABLE Venta(
+	VentaID						INT NOT NULL auto_increment,
     ClienteID					INT NOT NULL,
     CajeroID					INT NOT NULL,
     FechaFacturacion			DATETIME NOT NULL,
     TipoComprobante				VARCHAR(30) NOT NULL,
     NumeroSerie					VARCHAR(10) NOT NULL,
     Monto						DOUBLE NOT NULL,
-    constraint pk_DetalleFactura primary key(DetalleFacturaID),
-    constraint fk_DetalleFactura_VentaID foreign key(VentaID)
-    references Venta(VentaID) match simple
-    on update no action
-    on delete no action,
+    constraint pk_DetalleFactura primary key(VentaID),
     constraint fk_DetalleFactura_ClienteID foreign key(ClienteID)
     references Cliente(ClienteID) match simple
     on update no action
@@ -203,13 +158,14 @@ CREATE TABLE DetalleFactura(
 /*-CREACION DE LA ENTIDAD DETALLE-VENTA*/
 CREATE TABLE DetalleVenta(
 	DetalleVentaID				INT NOT NULL auto_increment,
-    DetalleFacturaID			INT NOT NULL,
+    VentaID						INT NOT NULL,
     ProductoID					INT NOT NULL,
     CantidadProducto			INT NOT NULL,
+    Precio						DOUBLE NOT NULL,
     SubTotal					DOUBLE NOT NULL,
     constraint pk_DetalleVenta primary key(DetalleVentaID),
-    constraint fk_DetalleVenta_DetalleFacturaID foreign key(DetalleFacturaID)
-    references DetalleFactura(DetalleFacturaID) match simple
+    constraint fk_DetalleVenta_VentaID foreign key(VentaID)
+    references Venta(VentaID) match simple
     on update no action
     on delete no action,
     constraint fk_DetalleVenta_ProductoID foreign key(ProductoID)
