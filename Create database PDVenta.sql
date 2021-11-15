@@ -9,7 +9,7 @@ CREATE TABLE CategoriaProducto(
 	CategoriaProductoID			INT NOT NULL auto_increment,
     Descripcion					VARCHAR(80) NOT NULL,
     FechaActualizacion			DATE NOT NULL,
-    constraint pk_Categoria primary key(CategoriaProductoID)
+    constraint pk_CategoriaProducto primary key(CategoriaProductoID)
 );
 /*-CREACION DE LA ENTIDAD PRODUCTO*/
 CREATE TABLE Producto(
